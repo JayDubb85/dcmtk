@@ -1,0 +1,37 @@
+name: Build DCMTK for Windows with JPEG 2000 Support
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-dcmtk:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout DCMTK source
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        choco install ninja -y
+        git clone --depth 1 https://github.com/uclouvain/openjpeg.git C:\openjpeg
+
+    - name: Configure CMake
+      run: |
+        mkdir C:\dcmtk_build
+        cmake -S . -B C:\dcmtk_build `
+          -G "Ninja" `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DDCMTK_WITH_OPENJPEG=ON `
+          -DDCMAKE_PREFIX_PATH="C:/openjpeg"
+
+    - name: Build
+      run: cmake --build C:\dcmtk_build --config Release
+
+    - name: Upload Artifact (Windows Binaries)
+      uses: actions/upload-artifact@v3
+      with:
+        name: dcmtk-windows-jpeg2000
+        path: |
+          C:\dcmtk_build\bin\Release\
