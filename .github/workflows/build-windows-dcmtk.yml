@@ -14,20 +14,29 @@ jobs:
     - name: Install dependencies
       run: |
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-        choco install ninja -y
-        git clone --depth 1 https://github.com/uclouvain/openjpeg.git C:\openjpeg
+        choco install ninja git -y
 
-    - name: Configure CMake
+    - name: Clone and build OpenJPEG
+      run: |
+        git clone --depth 1 https://github.com/uclouvain/openjpeg.git C:\openjpeg
+        cmake -S C:\openjpeg -B C:\openjpeg\build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+        cmake --build C:\openjpeg\build --config Release
+        echo "OpenJPEG built!"
+
+    - name: Configure DCMTK with OpenJPEG support
       run: |
         mkdir C:\dcmtk_build
         cmake -S . -B C:\dcmtk_build `
           -G "Ninja" `
           -DCMAKE_BUILD_TYPE=Release `
           -DDCMTK_WITH_OPENJPEG=ON `
-          -DDCMAKE_PREFIX_PATH="C:/openjpeg"
+          -DOPENJPEG_INCLUDE_DIR="C:/openjpeg/src/lib/openjp2" `
+          -DOPENJPEG_LIBRARY="C:/openjpeg/build/bin/openjp2.dll" `
+          -DCMAKE_PREFIX_PATH="C:/openjpeg/build"
 
-    - name: Build
-      run: cmake --build C:\dcmtk_build --config Release
+    - name: Build DCMTK
+      run: |
+        cmake --build C:\dcmtk_build --config Release
 
     - name: Upload Artifact (Windows Binaries)
       uses: actions/upload-artifact@v3
