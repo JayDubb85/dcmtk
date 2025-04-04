@@ -18,10 +18,9 @@ jobs:
 
     - name: Clone and build OpenJPEG
       run: |
-        git clone --depth 1 https://github.com/uclouvain/openjpeg.git C:\openjpeg
-        cmake -S C:\openjpeg -B C:\openjpeg\build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+        git clone https://github.com/uclouvain/openjpeg.git C:\openjpeg
+        cmake -S C:\openjpeg -B C:\openjpeg\build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
         cmake --build C:\openjpeg\build --config Release
-        echo "OpenJPEG built!"
 
     - name: Configure DCMTK with OpenJPEG support
       run: |
@@ -31,12 +30,10 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release `
           -DDCMTK_WITH_OPENJPEG=ON `
           -DOPENJPEG_INCLUDE_DIR="C:/openjpeg/src/lib/openjp2" `
-          -DOPENJPEG_LIBRARY="C:/openjpeg/build/bin/openjp2.dll" `
-          -DCMAKE_PREFIX_PATH="C:/openjpeg/build"
+          -DOPENJPEG_LIBRARY="C:/openjpeg/build/bin/Release/openjp2.lib"
 
     - name: Build DCMTK
-      run: |
-        cmake --build C:\dcmtk_build --config Release
+      run: cmake --build C:\dcmtk_build --config Release
 
     - name: Upload Artifact (Windows Binaries)
       uses: actions/upload-artifact@v3
